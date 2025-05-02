@@ -3,11 +3,10 @@ pipeline {
 
     tools {
         nodejs 'NodeJS'          // Name should match your Jenkins tool config
-        sonarQubeScanner 'SonarScanner' // Must match the name in Global Tool Configuration
     }
 
     environment {
-        SONAR_SCANNER_HOME = tool 'SonarScanner'
+        SONAR_SCANNER = tool 'SonarScanner'
     }
 
     stages {
@@ -34,7 +33,7 @@ pipeline {
             steps {
                 withSonarQubeEnv('SonarLocal') {
                     sh '''
-                    ${SONAR_SCANNER_HOME}/bin/sonar-scanner \
+                    ${SONAR_SCANNER}/bin/sonar-scanner \
                       -Dsonar.projectKey=my-node-app \
                       -Dsonar.sources=. \
                       -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info \
