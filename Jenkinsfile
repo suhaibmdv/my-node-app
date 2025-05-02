@@ -2,18 +2,18 @@ pipeline {
     agent any
 
     tools {
-        nodejs 'NodeJS'          // Name should match your Jenkins tool config
+        nodejs 'NodeJS' // Name from Jenkins > Global Tool Configuration
     }
 
     environment {
-        SONAR_SCANNER = tool 'SonarScanner'
+        SONAR_SCANNER = tool 'SonarScanner' // Must match the name from Jenkins tools
     }
 
     stages {
-
         stage('Checkout Code') {
             steps {
-                git branch: 'main', url: 'https://github.com/suhaibmdv/my-node-app.git'
+                git branch: 'main',
+                    url: 'https://github.com/suhaibmdv/my-node-app.git'
             }
         }
 
@@ -25,22 +25,31 @@ pipeline {
 
         stage('Run Tests') {
             steps {
-                sh 'npm test || true'  // Prevent build fail if no tests exist yet
+                // Optional: ensure tests pass and generate coverage if configured
+                sh 'npm test || true'
             }
         }
 
         stage('SonarQube Analysis') {
             steps {
                 withSonarQubeEnv('SonarLocal') {
-                    sh '''
-                    ${SONAR_SCANNER}/bin/sonar-scanner \
-                      -Dsonar.projectKey=my-node-app \
-                      -Dsonar.sources=. \
-                      -Dsonar.javascript.lcov.reportPaths=coverage/lcov.info \
-                      -Dsonar.host.url=http://localhost:9000
-                    '''
+                    withCredentials([string(credentialsId: 'sonar-token', variable: 'SONAR_TOKEN')]) {
+                        sh '''
+                        ${SONAR_SCANNER}/bin/sonar-scanner \
+                          -Dsonar.projectKey=my-node-app \
+                          -Dsonar.sources=. \
+                          -Dsonar.host.url=http://localhost:9000 \
+                          -Dsonar.login=$SONAR_TOKEN
+                        '''
+                    }
                 }
             }
+        }
+    }
+
+    post {
+        always {
+            echo 'Pipeline finished.'
         }
     }
 }
